@@ -1,0 +1,26 @@
+{
+  "short_name": "mugctl",
+  "name": "mugctl",
+  "description": "Control and monitor your connected mug.",
+  "theme_color": "#e95223",
+  "background_color": "#e95223",
+  "start_url": ".",
+  "display": "standalone",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "favicon192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "favicon512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}
