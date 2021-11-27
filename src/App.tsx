@@ -2,7 +2,7 @@
 
 import React from 'react';
 import {useDebouncyEffect} from 'use-debouncy';
-import {HuePicker, RGBColor} from 'react-color';
+import {CirclePicker, HuePicker, RGBColor} from 'react-color';
 import {
     Box,
     Button,
@@ -51,10 +51,26 @@ const Parameter = ({
     </Flex>);
 
 const ColorPicker = ({color, onChange}: { color: RawColor, onChange: (color: RawColor) => void }) => {
+    // It's important to provide the full 6-char hex, as fucking CirclePicker does no normalization whatsoever.
+    const fakeWhite = "#bbbbbb";
+
     const fullAlpha = {...color, a: 1} as RGBColor;
     const [c, setC] = React.useState<RGBColor>(fullAlpha);
     useDebouncyEffect(() => onChange({...c, a: 255} as RawColor), 500, [c]);
-    return (<HuePicker color={c} onChange={(cr) => setC(cr.rgb)}/>);
+
+    function setWhite() {
+        setC({r: 255, g: 255, b: 255, a: 1});
+    }
+
+    const isWhite: boolean = c.r === 255 && c.g === 255 && c.b === 255;
+
+    return (
+        <Flex direction="row" alignItems="center" css={{gap: "1rem"}}>
+            <HuePicker width="100%" color={c} onChange={(cr) => setC(cr.rgb)} className={isWhite ? "no-value" : ""}/>
+            <CirclePicker width="" color={isWhite ? fakeWhite : undefined} colors={[fakeWhite]}
+                          onChangeComplete={setWhite}/>
+        </Flex>
+    );
 }
 
 const TemperatureSlider = ({temperature, onChange}: { temperature: number, onChange: any }) => {

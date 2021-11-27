@@ -1,3 +1,7 @@
 body, #root {
   height: 100vh;
 }
+
+.hue-picker.no-value div > div > div {
+  display: none;
+}
