@@ -37,7 +37,11 @@ import BatteryIcon from './BatteryIcon';
 import mugPng from './mug.png';
 import './App.css';
 
-const Parameter = ({label, labelRight, children} : {label: string, labelRight?: React.ReactNode, children:React.ReactNode}) => (
+const Parameter = ({
+                       label,
+                       labelRight,
+                       children
+                   }: { label: string, labelRight?: React.ReactNode, children: React.ReactNode }) => (
     <Flex p={4} borderRadius={12} borderColor="gray.400" borderWidth={1} direction="column" css={{gap: '.6rem'}}>
         <Flex direction="row" justifyContent="space-between">
             <Text textColor="gray.600" textAlign="left" fontWeight="light">{label}</Text>
@@ -58,7 +62,7 @@ const TemperatureSlider = ({temperature, onChange}: { temperature: number, onCha
     return (
         <Parameter label="Target temperature"
                    labelRight={<Text textColor="gray.600" textAlign="right" fontWeight="semibold">{`${t}°C`}</Text>}>
-            <Flex direction="row" css={{gap: '1rem'}} justifyContent="center">
+            <Flex direction="row" css={{gap: "1rem"}} justifyContent="center">
                 <Text fontWeight="light" textColor="gray.400">50.0</Text>
                 <Slider aria-label="slider-ex-4" defaultValue={50.0} min={50.0} max={65.5} step={0.5} flex={1} value={t}
                         onChange={setT} onChangeEnd={() => onChange(t)}>
@@ -265,11 +269,11 @@ function Device() {
 
 function NoBt() {
     return (
-        <Box>
+        <Flex direction="column" alignItems="center" css={{gap: "1rem"}}>
             <Icon as={GrAlert} w={10} h={10}/>
             <Heading>Unsupported browser</Heading>
             <Text>Please use a browser with Bluetooth support, such as Chrome for Android.</Text>
-        </Box>
+        </Flex>
     );
 }
 
