@@ -30,7 +30,7 @@ import {
 import {IconAlertTriangle, IconPlug, IconMug, IconMugOff, IconTemperature, IconPencil} from '@tabler/icons-react';
 
 import Ember, {Battery, ConnState, RawColor} from './Ember';
-import {fromDisplay, temperatureDisplay, temperatureUnit, TempUnit, toDisplay} from './Util';
+import {fromDisplay, temperatureDisplay, temperatureUnit, TempUnit, toDisplay, useLocalStorage} from './Util';
 import BatteryIcon from './BatteryIcon';
 import mugPng from './mug.png';
 import './App.css';
@@ -73,15 +73,31 @@ const ColorPicker = ({color, onChange}: { color: RawColor, onChange: (color: Raw
 
 const TemperatureSlider = ({
                                temperature,
-                               onChange,
+                               setTargetTemperature,
                                unit,
-                           }: { temperature: number, onChange: (t: number) => void, unit: TempUnit }) => {
+                           }: { temperature: number, setTargetTemperature: (t: number) => void, unit: TempUnit }) => {
+    const [retainedTargetTemperature, setRetainedTargetTemperature] = useLocalStorage("targetTemp", temperature !== 0 ? temperature : 50.0);
     const [t, setT] = React.useState(temperature);
+
+    React.useEffect(() => {
+        setT(temperature)
+    }, [temperature]);
+
+    function saveRetainedAndSetZero() {
+        setRetainedTargetTemperature(temperature);
+        setTargetTemperature(0);
+    }
+
+    function restoreRetained() {
+        setTargetTemperature(retainedTargetTemperature);
+    }
+
     return (
         <Parameter label="Target temperature"
-                   labelRight={<Text textColor="gray.600" textAlign="right"
-                                     fontWeight="semibold">{`${temperatureDisplay(unit, t)}°${temperatureUnit(unit)}`}</Text>}>
-            <Flex direction="row" css={{gap: "1rem"}} justifyContent="center">
+                   labelRight={temperature !== 0 &&
+                   <Text textColor="gray.600" textAlign="right"
+                         fontWeight="semibold">{temperatureDisplay(unit, t)}°{temperatureUnit(unit)}</Text>}>
+            {temperature !== 0 && <Flex direction="row" css={{gap: "1rem"}} justifyContent="center">
                 <Text fontWeight="light" textColor="gray.400">{temperatureDisplay(unit, 50.0)}</Text>
                 <Slider aria-label="slider-ex-4"
                         defaultValue={toDisplay(unit, 50.0)}
@@ -89,14 +105,17 @@ const TemperatureSlider = ({
                         max={toDisplay(unit, 65.5)}
                         value={toDisplay(unit, t)}
                         onChange={(t) => setT(fromDisplay(unit, t))}
-                        onChangeEnd={() => onChange(fromDisplay(unit, t))}
+                        onChangeEnd={() => setTargetTemperature(fromDisplay(unit, t))}
                         step={0.5}
                         flex={1}>
                     <SliderTrack bg="gray.300"><SliderFilledTrack bg="brand.900"/></SliderTrack>
                     <SliderThumb boxSize={6}><Box color="brand.900" as={IconTemperature}/></SliderThumb>
                 </Slider>
                 <Text fontWeight="light" textColor="gray.400">{temperatureDisplay(unit, 65.5)}</Text>
-            </Flex>
+            </Flex>}
+            {temperature !== 0 ?
+                <Button leftIcon={<IconMugOff/>} onClick={() => saveRetainedAndSetZero()}>Turn off</Button>
+                : <Button leftIcon={<IconMug/>} onClick={() => restoreRetained()}>Turn on</Button>}
         </Parameter>
     );
 }
@@ -294,7 +313,7 @@ function Device() {
                          onNameChange={promptAndSendName}/>
                 <TemperatureSlider temperature={targetTemperature!}
                                    unit={temperatureUnit!}
-                                   onChange={t => ember.setTargetTemperature(t)}/>
+                                   setTargetTemperature={t => ember.setTargetTemperature(t)}/>
                 <Parameter label="LED color">
                     <ColorPicker color={ledColor!} onChange={c => ember.setLedColor(c)}/>
                 </Parameter>

@@ -172,7 +172,7 @@ export default class Ember {
     }
 
     private async _setTargetTemperature(temperature: number) {
-        if (temperature < 50.0) temperature = 50.0;
+        if (temperature !== 0 && temperature < 50.0) temperature = 50.0;
         if (temperature > 65.5) temperature = 65.5;
         const d = new DataView(new ArrayBuffer(2));
         d.setUint16(0, temperature * temperatureScale, true);
