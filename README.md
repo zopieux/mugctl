@@ -12,6 +12,8 @@ Bloat-free web app for monitoring and controlling Ember Bluetooth mugs.
 This requires a recent Chrome for Android, Firefox has no Bluetooth support. The page will prompt you to install the
 website as a [pseudo-app](https://web.dev/install-criteria/), which I recommend accepting for convenience.
 
+See [change log](CHANGELOG.md) for release notes.
+
 ## Rationale
 
 The official Android application from Ember Technologies is a whopping 22 MB and requires creating an account to 
