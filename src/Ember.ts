@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT.
 
 import async from 'async';
+import {TempUnit} from "./Util";
 
 export type RawColor = { r: number, g: number, b: number, a: number };
 export type Battery = { level: number, charging: boolean };
@@ -9,6 +10,7 @@ export type Setters = {
     setConnState: (cs: ConnState) => void,
     setDrinkTemperature: (t: number) => void,
     setTargetTemperature: (t: number) => void,
+    setTemperatureUnit: (u: TempUnit) => void,
     setBattery: (b: (Battery | null | ((b: Battery | null) => Battery | null))) => void,
     setLiquidLevel: (l: number) => void,
     setLiquidState: (s: LiquidState) => void,
@@ -23,6 +25,7 @@ enum Uuid {
     mugNameChar = 'fc540001-236c-4c94-8fa9-944a3e5353fa',
     drinkTempChar = 'fc540002-236c-4c94-8fa9-944a3e5353fa',
     targetTempChar = 'fc540003-236c-4c94-8fa9-944a3e5353fa',
+    tempUnitChar = 'fc540004-236c-4c94-8fa9-944a3e5353fa',
     liquidLevelChar = 'fc540005-236c-4c94-8fa9-944a3e5353fa',
     batteryChar = 'fc540007-236c-4c94-8fa9-944a3e5353fa',
     liquidStateChar = 'fc540008-236c-4c94-8fa9-944a3e5353fa',
@@ -39,6 +42,7 @@ const toBattery = (d: DataView): Battery => ({level: d.getUint8(0) / 100, chargi
 const toColor = (d: DataView): RawColor => ({r: d.getUint8(0), g: d.getUint8(1), b: d.getUint8(2), a: d.getUint8(3)});
 const toLevel = (d: DataView): number => d.getUint8(0) / 100;
 const toLiquidState = (d: DataView): LiquidState => d.getUint8(0);
+const toTemperatureUnit = (d: DataView): TempUnit => d.getUint8(0) === 1 ? TempUnit.Fahrenheit : TempUnit.Celsius;
 
 enum Event {
     battery = 1, chargerConnected = 2, chargerDisconnected = 3, targetTemperature = 4, drinkTemperature = 5, liquidLevel = 7, liquidState = 8,
@@ -79,7 +83,7 @@ export default class Ember {
             }],
             optionalServices: [Uuid.emberService],
         });
-        if (!this._device) throw new Error('Cevice selection cancelled');
+        if (!this._device) throw new Error('Device selection cancelled');
         this._setters.setConnState(ConnState.connecting);
         this._device.addEventListener('gattserverdisconnected', (e) => {
             console.debug('GATT server disconnected');
@@ -94,6 +98,7 @@ export default class Ember {
             Uuid.mugNameChar,
             Uuid.drinkTempChar,
             Uuid.targetTempChar,
+            Uuid.tempUnitChar,
             Uuid.liquidLevelChar,
             Uuid.batteryChar,
             Uuid.liquidStateChar,
@@ -152,6 +157,14 @@ export default class Ember {
          this._queue.push({that: this, cmd: 'setLedColor', args: [color]});
     }
 
+    getTemperatureUnit() {
+        this._queue.push({that: this, cmd: 'getTemperatureUnit'});
+    }
+
+    setTemperatureUnit(unit: TempUnit) {
+        this._queue.push({that: this, cmd: 'setTemperatureUnit', args: [unit]});
+    }
+
     private async _setMugName(name: string) {
         const encoded = (new TextEncoder()).encode(name);
         await this._chars[Uuid.mugNameChar]!.writeValueWithoutResponse(encoded);
@@ -175,6 +188,13 @@ export default class Ember {
         d.setUint8(3, color.a);
         await this._chars[Uuid.ledColorChar]!.writeValueWithoutResponse(d);
         this.getLedColor();
+    }
+
+    private async _setTemperatureUnit(unit: TempUnit) {
+        const d = new DataView(new ArrayBuffer(1));
+        d.setUint8(0, unit === TempUnit.Fahrenheit ? 1 : 0);
+        await this._chars[Uuid.tempUnitChar]!.writeValueWithoutResponse(d);
+        this.getTemperatureUnit();
     }
 
     private static async _worker({that, cmd, args}: { cmd: string, args?: any, that: Ember }) {
@@ -215,6 +235,13 @@ export default class Ember {
             case 'setLedColor':
                 const [color] = args;
                 await that._setLedColor(color);
+                break;
+            case 'getTemperatureUnit':
+                that._setters.setTemperatureUnit(toTemperatureUnit(await that._chars[Uuid.tempUnitChar]!.readValue()));
+                break;
+            case 'setTemperatureUnit':
+                const [unit] = args;
+                await that._setTemperatureUnit(unit);
                 break;
         }
     }

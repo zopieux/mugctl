@@ -33,6 +33,7 @@ import {GrAlert} from '@react-icons/all-files/gr/GrAlert';
 import {AiFillEdit} from '@react-icons/all-files/ai/AiFillEdit';
 
 import Ember, {Battery, ConnState, RawColor} from './Ember';
+import {fromDisplay, temperatureDisplay, temperatureUnit, TempUnit, toDisplay} from './Util';
 import BatteryIcon from './BatteryIcon';
 import mugPng from './mug.png';
 import './App.css';
@@ -73,19 +74,31 @@ const ColorPicker = ({color, onChange}: { color: RawColor, onChange: (color: Raw
     );
 }
 
-const TemperatureSlider = ({temperature, onChange}: { temperature: number, onChange: any }) => {
+const TemperatureSlider = ({
+                               temperature,
+                               onChange,
+                               unit,
+                           }: { temperature: number, onChange: (t: number) => void, unit: TempUnit }) => {
     const [t, setT] = React.useState(temperature);
     return (
         <Parameter label="Target temperature"
-                   labelRight={<Text textColor="gray.600" textAlign="right" fontWeight="semibold">{`${t}°C`}</Text>}>
+                   labelRight={<Text textColor="gray.600" textAlign="right"
+                                     fontWeight="semibold">{`${temperatureDisplay(unit, t)}°${temperatureUnit(unit)}`}</Text>}>
             <Flex direction="row" css={{gap: "1rem"}} justifyContent="center">
-                <Text fontWeight="light" textColor="gray.400">50.0</Text>
-                <Slider aria-label="slider-ex-4" defaultValue={50.0} min={50.0} max={65.5} step={0.5} flex={1} value={t}
-                        onChange={setT} onChangeEnd={() => onChange(t)}>
+                <Text fontWeight="light" textColor="gray.400">{temperatureDisplay(unit, 50.0)}</Text>
+                <Slider aria-label="slider-ex-4"
+                        defaultValue={toDisplay(unit, 50.0)}
+                        min={toDisplay(unit, 50.0)}
+                        max={toDisplay(unit, 65.5)}
+                        value={toDisplay(unit, t)}
+                        onChange={(t) => setT(fromDisplay(unit, t))}
+                        onChangeEnd={() => onChange(fromDisplay(unit, t))}
+                        step={0.5}
+                        flex={1}>
                     <SliderTrack bg="gray.300"><SliderFilledTrack bg="brand.900"/></SliderTrack>
                     <SliderThumb boxSize={6}><Box color="brand.900" as={FaThermometerHalf}/></SliderThumb>
                 </Slider>
-                <Text fontWeight="light" textColor="gray.400">65.5</Text>
+                <Text fontWeight="light" textColor="gray.400">{temperatureDisplay(unit, 65.5)}</Text>
             </Flex>
         </Parameter>
     );
@@ -128,25 +141,23 @@ function Connecting({children}: { children?: JSX.Element }) {
 function BatteryIndicator({battery}: { battery: Battery }) {
     return (
         <Flex direction="row" alignSelf="center" alignItems="center" justifyContent="space-between">
-            <Flex direction="row" css={{gap: ".2rem"}} alignItems="center">
+            <Flex direction="row" css={{gap: ".2rem"}} alignItems="center" title={battery.charging ? 'charging' : 'discharging'}>
                 <BatteryIcon battery={battery}/>
-                <Text>
-                    {(battery.level * 100).toFixed(0)}%
-                    <Text as="span" textColor="gray.400"
-                          fontSize="sm"> {battery.charging ? 'charging' : 'discharging'}</Text>
-                </Text>
+                <Text>{(battery.level * 100).toFixed(0)}%</Text>
             </Flex>
         </Flex>);
 }
 
 const MugInfo = ({
                      temperature,
+                     unit,
+                     setTemperatureUnit,
                      name,
                      battery,
                      ledColor,
                      onNameChange,
                      liquidLevel
-                 }: { temperature: number, name: string, battery: Battery, ledColor: RawColor, liquidLevel: number, onNameChange: () => void }) => {
+                 }: { temperature: number, unit: TempUnit, setTemperatureUnit: (u: TempUnit) => void, name: string, battery: Battery, ledColor: RawColor, liquidLevel: number, onNameChange: () => void }) => {
     const ledDiv = React.useRef(null);
     React.useEffect(() => {
         if (!ledDiv.current || !ledColor) return;
@@ -186,16 +197,30 @@ const MugInfo = ({
                 <Heading fontSize="lg" fontWeight="semibold">{name}</Heading>
                 <IconButton variant="ghost" aria-label="Rename" icon={<AiFillEdit/>} onClick={onNameChange} px={4}/>
             </Flex>
-            <Text fontSize="5xl">{temperature.toFixed(1)}°C</Text>
-            <BatteryIndicator battery={battery}/>
+            <Text fontSize="5xl">{temperatureDisplay(unit, temperature)}°{temperatureUnit(unit)}</Text>
+            <Flex direction="row" alignItems="center" css={{gap: "1rem"}}>
+                <BatteryIndicator battery={battery}/>
+                <TemperatureUnitSelector unit={unit} setUnit={setTemperatureUnit}/>
+            </Flex>
         </Flex>
     </Flex>);
+}
+
+function TemperatureUnitSelector({unit, setUnit}: { unit: TempUnit, setUnit: (u: TempUnit) => void }) {
+    const show = (wanted: TempUnit) =>
+        unit === wanted ?
+            <Text fontWeight="semibold" display="inline">{temperatureUnit(wanted)}</Text>
+            : <>{temperatureUnit(wanted)}</>;
+    return (<div onClick={() => setUnit(unit === TempUnit.Celsius ? TempUnit.Fahrenheit : TempUnit.Celsius)}>
+        {show(TempUnit.Celsius)} | {show(TempUnit.Fahrenheit)}
+    </div>);
 }
 
 function Device() {
     const [mugName, setMugName] = React.useState<string | null>(null);
     const [drinkTemperature, setDrinkTemperature] = React.useState<number | null>(null);
     const [targetTemperature, setTargetTemperature] = React.useState<number | null>(null);
+    const [temperatureUnit, setTemperatureUnit] = React.useState<TempUnit | null>(null);
     const [liquidLevel, setLiquidLevel] = React.useState<number | null>(null);
     const [liquidState, setLiquidState] = React.useState<number | null>(null);
     const [battery, setBattery] = React.useState<Battery | null>(null);
@@ -207,6 +232,7 @@ function Device() {
         setConnState,
         setDrinkTemperature,
         setTargetTemperature,
+        setTemperatureUnit,
         setLiquidLevel,
         setLiquidState,
         setBattery,
@@ -233,13 +259,14 @@ function Device() {
             ember.getDrinkTemperature();
             ember.getBattery();
             ember.getTargetTemperature();
+            ember.getTemperatureUnit();
             ember.getLiquidLevel();
             ember.getLedColor();
             ember.getLiquidState();
         })();
     }, [ember, connState]);
 
-    const hasFullState = [mugName, drinkTemperature, battery, targetTemperature, liquidLevel, ledColor, liquidState]
+    const hasFullState = [mugName, drinkTemperature, temperatureUnit, battery, targetTemperature, liquidLevel, ledColor, liquidState]
         .reduce((full, data: null | any) => full && data !== null, true);
 
     function promptAndSendName() {
@@ -247,14 +274,6 @@ function Device() {
         const newName = prompt('Set mug name', mugName);
         if (newName === null) return;
         ember.setMugName(newName);
-    }
-
-    function sendLedColor(rawColor: RawColor) {
-        ember.setLedColor(rawColor);
-    }
-
-    function sendTargetTemperature(temperature: number) {
-        ember.setTargetTemperature(temperature);
     }
 
     return (<>{
@@ -269,14 +288,18 @@ function Device() {
         || ((connState === ConnState.ready && hasFullState) && (
             <>
                 <MugInfo temperature={drinkTemperature!}
+                         unit={temperatureUnit!}
+                         setTemperatureUnit={u => ember.setTemperatureUnit(u)}
                          name={mugName!}
                          battery={battery!}
                          ledColor={ledColor!}
                          liquidLevel={liquidLevel!}
                          onNameChange={promptAndSendName}/>
-                <TemperatureSlider temperature={targetTemperature!} onChange={sendTargetTemperature}/>
+                <TemperatureSlider temperature={targetTemperature!}
+                                   unit={temperatureUnit!}
+                                   onChange={t => ember.setTargetTemperature(t)}/>
                 <Parameter label="LED color">
-                    <ColorPicker color={ledColor!} onChange={sendLedColor}/>
+                    <ColorPicker color={ledColor!} onChange={c => ember.setLedColor(c)}/>
                 </Parameter>
             </>
         ))
