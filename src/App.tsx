@@ -27,10 +27,7 @@ import {
     Spinner,
     Text,
 } from '@chakra-ui/react';
-import {GrConnect} from '@react-icons/all-files/gr/GrConnect';
-import {FaThermometerHalf} from '@react-icons/all-files/fa/FaThermometerHalf';
-import {GrAlert} from '@react-icons/all-files/gr/GrAlert';
-import {AiFillEdit} from '@react-icons/all-files/ai/AiFillEdit';
+import {IconAlertTriangle, IconPlug, IconMug, IconMugOff, IconTemperature, IconPencil} from '@tabler/icons-react';
 
 import Ember, {Battery, ConnState, RawColor} from './Ember';
 import {fromDisplay, temperatureDisplay, temperatureUnit, TempUnit, toDisplay} from './Util';
@@ -96,7 +93,7 @@ const TemperatureSlider = ({
                         step={0.5}
                         flex={1}>
                     <SliderTrack bg="gray.300"><SliderFilledTrack bg="brand.900"/></SliderTrack>
-                    <SliderThumb boxSize={6}><Box color="brand.900" as={FaThermometerHalf}/></SliderThumb>
+                    <SliderThumb boxSize={6}><Box color="brand.900" as={IconTemperature}/></SliderThumb>
                 </Slider>
                 <Text fontWeight="light" textColor="gray.400">{temperatureDisplay(unit, 65.5)}</Text>
             </Flex>
@@ -110,7 +107,7 @@ function Connect({onClick, error}: { onClick: any, error: string | null }) {
         <Flex direction="column" justifyContent="space-evenly" flex={1}>
             <Popover isOpen={open} onClose={() => setOpen(false)} closeOnBlur={false} placement="bottom">
                 <PopoverTrigger>
-                    <Button variant="outline" onClick={onClick} leftIcon={<GrConnect/>} size="lg">
+                    <Button variant="outline" onClick={onClick} leftIcon={<IconPlug/>} size="lg">
                         <Text>Connect</Text>
                     </Button>
                 </PopoverTrigger>
@@ -195,7 +192,7 @@ const MugInfo = ({
         <Flex direction="column" flex={1} alignItems="center">
             <Flex direction="row" alignItems="center">
                 <Heading fontSize="lg" fontWeight="semibold">{name}</Heading>
-                <IconButton variant="ghost" aria-label="Rename" icon={<AiFillEdit/>} onClick={onNameChange} px={4}/>
+                <IconButton variant="ghost" aria-label="Rename" icon={<IconPencil/>} onClick={onNameChange} px={4}/>
             </Flex>
             <Text fontSize="5xl">{temperatureDisplay(unit, temperature)}°{temperatureUnit(unit)}</Text>
             <Flex direction="row" alignItems="center" css={{gap: "1rem"}}>
@@ -309,7 +306,7 @@ function Device() {
 function NoBt() {
     return (
         <Flex direction="column" alignItems="center" css={{gap: "1rem"}}>
-            <Icon as={GrAlert} w={10} h={10}/>
+            <Icon as={IconAlertTriangle} w={10} h={10}/>
             <Heading>Unsupported browser</Heading>
             <Text>Please use a browser with Bluetooth support, such as Chrome for Android.</Text>
         </Flex>
