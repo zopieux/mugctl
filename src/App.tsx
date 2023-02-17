@@ -14,7 +14,7 @@ import {
     Heading,
     Icon,
     IconButton,
-    Img,
+    Img, Link,
     Popover,
     PopoverBody,
     PopoverContent,
@@ -346,6 +346,7 @@ const colors = {
         900: 'hsl(14,82%,53%)',
         800: 'hsl(14,82%,57%)',
         700: 'hsl(14,82%,61%)',
+        100: 'hsl(15,43%,38%)',
     }
 }
 const theme = extendTheme({colors});
@@ -357,13 +358,17 @@ function App() {
     const hasBt = !!navigator.bluetooth;
     return (
         <ChakraProvider theme={theme}>
-            <Flex minH="100%" direction="column">
+            <Flex minH="100%" direction="column" justifyContent="space-between">
                 <Box bgColor="brand.900" textColor="gray.50" py={4}>
                     <Centered><Heading textAlign="center">mugctl</Heading></Centered>
                 </Box>
                 <Centered flex={1} display="flex" flexDirection="column" justifyContent="space-around">
                     {hasBt ? <Device/> : <NoBt/>}
                 </Centered>
+                <Text fontSize="smaller" alignSelf="center" textColor="gray.400" paddingBlockEnd="12px">
+                    <Link href="https://github.com/zopieux/mugctl/issues" color="brand.100" isExternal={true}>report an issue</Link>
+                    {" "}&middot; open-source app by <Link href="https://mastodon.social/@zopieux" color="brand.100" isExternal={true}>zopieux</Link>
+                </Text>
             </Flex>
         </ChakraProvider>
     );
