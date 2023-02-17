@@ -4,12 +4,12 @@ import React from 'react';
 import {useDebouncyEffect} from 'use-debouncy';
 import {CirclePicker, HuePicker, RGBColor} from 'react-color';
 import {
+    ContainerProps,
+    extendTheme,
     Box,
     Button,
     ChakraProvider,
     Container,
-    ContainerProps,
-    extendTheme,
     Flex,
     Heading,
     Icon,
@@ -27,9 +27,20 @@ import {
     Spinner,
     Text,
 } from '@chakra-ui/react';
-import {IconAlertTriangle, IconPlug, IconMug, IconMugOff, IconTemperature, IconPencil} from '@tabler/icons-react';
+import {
+    IconAlertTriangle,
+    IconPlug,
+    IconMug,
+    IconMugOff,
+    IconTemperature,
+    IconPencil,
+    IconSnowflake,
+    IconFlame,
+    IconCheck,
+    IconZzz, IconQuestionMark
+} from '@tabler/icons-react';
 
-import Ember, {Battery, ConnState, RawColor} from './Ember';
+import Ember, {Battery, ConnState, LiquidState, RawColor} from './Ember';
 import {fromDisplay, temperatureDisplay, temperatureUnit, TempUnit, toDisplay, useLocalStorage} from './Util';
 import BatteryIcon from './BatteryIcon';
 import mugPng from './mug.png';
@@ -172,8 +183,9 @@ const MugInfo = ({
                      battery,
                      ledColor,
                      onNameChange,
-                     liquidLevel
-                 }: { temperature: number, unit: TempUnit, setTemperatureUnit: (u: TempUnit) => void, name: string, battery: Battery, ledColor: RawColor, liquidLevel: number, onNameChange: () => void }) => {
+                     liquidLevel,
+                     liquidState,
+                 }: { temperature: number, unit: TempUnit, setTemperatureUnit: (u: TempUnit) => void, name: string, battery: Battery, ledColor: RawColor, liquidLevel: number, liquidState: LiquidState, onNameChange: () => void }) => {
     const ledDiv = React.useRef(null);
     React.useEffect(() => {
         if (!ledDiv.current || !ledColor) return;
@@ -192,6 +204,7 @@ const MugInfo = ({
         <Box position="relative" alignSelf="center" maxW="19vh">
             <Img src={mugPng} objectFit="contain"/>
             <WaterLevel level={liquidLevel}/>
+            <StateIcon state={liquidState}/>
         </Box>
         <Flex direction="column" flex={1} alignItems="center">
             <Flex direction="row" alignItems="center">
@@ -210,11 +223,25 @@ const MugInfo = ({
 function TemperatureUnitSelector({unit, setUnit}: { unit: TempUnit, setUnit: (u: TempUnit) => void }) {
     const show = (wanted: TempUnit) =>
         unit === wanted ?
-            <Text fontWeight="semibold" display="inline">{temperatureUnit(wanted)}</Text>
-            : <>{temperatureUnit(wanted)}</>;
+            <Text fontWeight="semibold" display="inline">°{temperatureUnit(wanted)}</Text>
+            : <>°{temperatureUnit(wanted)}</>;
     return (<div onClick={() => setUnit(unit === TempUnit.Celsius ? TempUnit.Fahrenheit : TempUnit.Celsius)}>
         {show(TempUnit.Celsius)} | {show(TempUnit.Fahrenheit)}
     </div>);
+}
+
+function StateIcon({state}: { state: LiquidState }) {
+    let [icon, color] = {
+        [LiquidState.off]: [IconZzz, '#bdbdbd'],
+        [LiquidState.empty]: [IconZzz, '#bdbdbd'],
+        [LiquidState.filling]: [IconZzz, '#bdbdbd'],
+        [LiquidState.cold]: [IconSnowflake, 'white'],
+        [LiquidState.cooling]: [IconSnowflake, 'white'],
+        [LiquidState.heating]: [IconFlame, '#bda101'],
+        [LiquidState.atTemperature]: [IconCheck, '#75bd01'],
+        [LiquidState.warm]: [IconFlame, '#bda101'],
+    }[state] || [IconQuestionMark, '#bdbdbd'];
+    return (<Icon as={icon as () => JSX.Element} color={color as string} className="state-icon" boxSize="1.5rem"/>);
 }
 
 function Device() {
@@ -295,6 +322,7 @@ function Device() {
                          battery={battery!}
                          ledColor={ledColor!}
                          liquidLevel={liquidLevel!}
+                         liquidState={liquidState!}
                          onNameChange={promptAndSendName}/>
                 <TemperatureSlider temperature={targetTemperature!}
                                    unit={temperatureUnit!}

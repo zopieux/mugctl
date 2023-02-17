@@ -6,6 +6,15 @@ body, #root {
     display: none;
 }
 
+.state-icon {
+    position: absolute;
+    display: flex;
+    left: calc(20px + 20% + 1.2rem);
+    top: calc(50% - 1.5rem);
+    height: 100%;
+    align-self: center;
+}
+
 .water-level {
     width: 20%;
     position: absolute;

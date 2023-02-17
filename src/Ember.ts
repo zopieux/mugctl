@@ -50,7 +50,7 @@ enum Event {
 }
 
 export enum LiquidState {
-  off = 0, empty = 1, cold = 3, tooLow = 5, atTemperature = 6, unknown7 = 7
+  off = 0, empty = 1, filling = 2, cold = 3, cooling = 4, heating = 5, atTemperature = 6, warm = 7,
 }
 
 export enum ConnState {
