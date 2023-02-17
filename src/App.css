@@ -1,7 +1,66 @@
 body, #root {
-  height: 100vh;
+    height: 100vh;
 }
 
 .hue-picker.no-value div > div > div {
-  display: none;
+    display: none;
+}
+
+.water-level {
+    width: 20%;
+    position: absolute;
+    overflow: hidden;
+    top: 12px;
+    bottom: 27px;
+    left: 20px;
+    border-radius: 12px;
+    background-color: hsl(0, 0%, 23%);
+}
+
+.water-level-water {
+    position: absolute;
+    left: 0;
+    top: 10%;
+    bottom: 0;
+    width: 100%;
+    background-color: #4d6de3;
+    transition: transform ease-out 1.2s;
+}
+
+.water-level-wave {
+    width: 200%;
+    position: absolute;
+    bottom: 100%;
+    transform-origin: bottom;
+}
+
+.water-level-back {
+    right: 0;
+    fill: #c7eeff;
+    animation: wave-back 5s infinite linear;
+}
+
+.water-level-front {
+    left: 0;
+    fill: #4d6de3;
+    margin-bottom: -0.5px;
+    animation: wave-front 2.5s infinite linear;
+}
+
+@keyframes wave-front {
+    0% {
+        transform: translate(0%, 0) scale(1, 1.7);
+    }
+    100% {
+        transform: translate(-50%, 0) scale(1, 1.7);
+    }
+}
+
+@keyframes wave-back {
+    0% {
+        transform: translate(0%, 0) scale(1, 2);
+    }
+    100% {
+        transform: translate(50%, 0) scale(1, 2);
+    }
 }

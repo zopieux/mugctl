@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT.
+
 import {useState} from "react";
 
 export enum TempUnit { Celsius = "CELSIUS", Fahrenheit = "FAHRENHEIT"}
@@ -27,6 +29,10 @@ export function temperatureDisplay(unit: TempUnit, celsius: number) {
     const fixed = display.toFixed(1);
     if (fixed.endsWith('.0') || fixed.endsWith('.9')) return display.toFixed(0);
     return fixed;
+}
+
+export function clamp(e: number, min: number, max: number) {
+    return e < min ? min : e > max ? max : e;
 }
 
 // From https://usehooks.com/useLocalStorage/.

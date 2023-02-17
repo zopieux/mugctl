@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT.
 
 import async from 'async';
-import {TempUnit} from "./Util";
+import {TempUnit, clamp} from './Util';
 
 export type RawColor = { r: number, g: number, b: number, a: number };
 export type Battery = { level: number, charging: boolean };
@@ -35,12 +35,13 @@ enum Uuid {
 }
 
 const temperatureScale = 100;
+const fullLiquidLevel = 30;
 
 const toStr = (d: DataView) => (new TextDecoder()).decode(d.buffer);
 const toTemperature = (d: DataView) => d.getUint16(0, true) / temperatureScale;
 const toBattery = (d: DataView): Battery => ({level: d.getUint8(0) / 100, charging: d.getUint8(1) === 1});
 const toColor = (d: DataView): RawColor => ({r: d.getUint8(0), g: d.getUint8(1), b: d.getUint8(2), a: d.getUint8(3)});
-const toLevel = (d: DataView): number => d.getUint8(0) / 100;
+const toLevel = (d: DataView): number => clamp(d.getUint8(0) / fullLiquidLevel, 0, 1);
 const toLiquidState = (d: DataView): LiquidState => d.getUint8(0);
 const toTemperatureUnit = (d: DataView): TempUnit => d.getUint8(0) === 1 ? TempUnit.Fahrenheit : TempUnit.Celsius;
 
