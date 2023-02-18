@@ -14,11 +14,12 @@ export default function BatteryIcon({
                                         battery: {level, charging},
                                         ...props
                                     }: { battery: Battery } & Record<string, any>) {
-    let icon = charging ? IconBatteryCharging
+    const icon = charging ? IconBatteryCharging
         : level <= .2 ? IconBattery
             : level <= .5 ? IconBattery1
                 : level <= .6 ? IconBattery2
                     : level <= .8 ? IconBattery3
                         : IconBattery4;
-    return (<Icon as={icon} {...(level < .2 ? {color: 'orange.600'} : {})} {...props}/>);
+    const color = charging ? 'green.600' : level < .2 ? 'orange.600' : undefined;
+    return (<Icon as={icon} color={color} {...props}/>);
 }
