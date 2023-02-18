@@ -4,10 +4,9 @@ Bloat-free web app for monitoring and controlling Ember Bluetooth mugs.
 
 ## Usage
 
-
-<img src=".github/screenshot.png" align="right" height="512"/>
-
 [**Launch the app now**](https://zopieux.github.io/mugctl/), no installation required.
+
+<img src=".github/screenshot.apng" align="right" height="512"/>
 
 This requires a recent Chrome for Android, Firefox has no Bluetooth support. The page will prompt you to install the
 website as a [pseudo-app](https://web.dev/install-criteria/), which I recommend accepting for convenience.
