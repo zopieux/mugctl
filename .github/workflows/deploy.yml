@@ -10,13 +10,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup node
-        uses: actions/setup-node@v1.4.4
+        uses: actions/setup-node@v3
         with:
-          node-version: 'v16.11.1'
-          registry-url: 'https://registry.npmjs.org'
+          node-version: 16
+          cache: 'npm'
 
       - name: Install Yarn
         run: npm install -g yarn
@@ -27,7 +27,7 @@ jobs:
           yarn run build
 
       - name: Deploy on GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@4.1.6
+        uses: JamesIves/github-pages-deploy-action@v4.4.1
         with:
           folder: build
           token: ${{ secrets.DEPLOY_TOKEN }}
@@ -35,5 +35,5 @@ jobs:
           branch: master
           target-folder: mugctl
           commit-message: Deploy mugctl.
-          git-config-user: Alexandre Macabies
+          git-config-name: Alexandre Macabies
           git-config-email: <web+oss@zopieux.com>
