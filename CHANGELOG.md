@@ -1,3 +1,7 @@
+# 2023-02-21
+
+* Fix a bug when setting the temperature in Fahrenheit.
+
 # 2023-02-17
 
 * Add support for turning off the heater entirely. The last preferred target temperature is persisted to local device storage.

@@ -115,8 +115,8 @@ const TemperatureSlider = ({
                         min={toDisplay(unit, 50.0)}
                         max={toDisplay(unit, 65.5)}
                         value={toDisplay(unit, t)}
-                        onChange={(t) => setT(fromDisplay(unit, t))}
-                        onChangeEnd={() => setTargetTemperature(fromDisplay(unit, t))}
+                        onChange={(tInDisplay) => setT(fromDisplay(unit, tInDisplay))}
+                        onChangeEnd={() => setTargetTemperature(t)}
                         step={0.5}
                         flex={1}>
                     <SliderTrack bg="gray.300"><SliderFilledTrack bg="brand.900"/></SliderTrack>

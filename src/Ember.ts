@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT.
 
 import async from 'async';
-import {TempUnit, clamp} from './Util';
+import {clamp, TempUnit} from './Util';
 
 export type RawColor = { r: number, g: number, b: number, a: number };
 export type Battery = { level: number, charging: boolean };
