@@ -7,6 +7,7 @@ export default [
     {
         files: ["**/*.{js,jsx,ts,tsx}"],
         plugins: { react, ts },
+        settings: { react: { version: "detect" } },
         languageOptions: {
             parser: tsParser,
             parserOptions: {
@@ -25,9 +26,12 @@ export default [
             "quotes": ["error", "double"],
             "react/jsx-uses-react": "error",
             "react/jsx-uses-vars": "error",
+            "no-trailing-spaces": "error",
+            "indent": ["error", 4],
+            "react/no-unescaped-entities": ["error", { "forbid": [">", "}"] }],
             "semi": ["error", "never"],
             "sort-imports": ["error", { "ignoreCase": true, "allowSeparatedGroups": true, "memberSyntaxSortOrder": ["none", "single", "multiple", "all"] }],
-            "spaced-comment": ["error", "always"],
+            "spaced-comment": ["error", "always", { markers: ["/"] }],
         },
     },
 ]
