@@ -279,6 +279,21 @@ function Device() {
         }
     }
 
+    React.useEffect(() => {
+        if (ember.connected() || connState !== ConnState.idle) return
+        async function run() {
+            setError(null);
+            try {
+                const ok = await ember.maybeReconnect()
+                if (!ok) throw 'No readily available device'
+            } catch (e) {
+                setError(`${e}`);
+                setConnState(ConnState.idle);
+            }
+        }
+        run()
+    }, [ember, connState])
+
     // Initial read once connected.
     React.useEffect(() => {
         if (!ember.connected() || connState !== ConnState.ready) return;
@@ -292,6 +307,7 @@ function Device() {
             ember.getLedColor();
             ember.getLiquidState();
         })();
+        ember.bond();
     }, [ember, connState]);
 
     const hasFullState = [mugName, drinkTemperature, temperatureUnit, battery, targetTemperature, liquidLevel, ledColor, liquidState]

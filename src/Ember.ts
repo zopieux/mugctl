@@ -32,6 +32,7 @@ enum Uuid {
     ledColorChar = 'fc540014-236c-4c94-8fa9-944a3e5353fa',
     pushEventChar = 'fc540012-236c-4c94-8fa9-944a3e5353fa',
     statisticsChar = 'fc540013-236c-4c94-8fa9-944a3e5353fa',
+    bondChar = 'fc54000e-236c-4c94-8fa9-944a3e5353fa',
 }
 
 const temperatureScale = 100;
@@ -74,24 +75,25 @@ export default class Ember {
         return Object.keys(this._chars).length !== 0;
     }
 
-    async connect() {
-        console.info('Connecting');
-        this._setters.setConnState(ConnState.choosing);
-        this._device = await navigator.bluetooth.requestDevice({
-            filters: [{
-                name: btName,
-                services: [Uuid.descriptorService],
-            }],
-            optionalServices: [Uuid.emberService],
-        });
-        if (!this._device) throw new Error('Device selection cancelled');
+    async maybeReconnect() {
+        const devices = await navigator.bluetooth.getDevices()
+        if (devices.length) {
+            this._device = devices[0]
+            this._initialize()
+            return true
+        }
+        return false
+    }
+
+    private async _initialize() {
+        console.info('Initializing');
         this._setters.setConnState(ConnState.connecting);
-        this._device.addEventListener('gattserverdisconnected', (e) => {
+        this._device!.addEventListener('gattserverdisconnected', (e) => {
             console.debug('GATT server disconnected');
             this._chars = {};
             this._setters.setConnState(ConnState.idle);
         });
-        const server = await this._device.gatt?.connect();
+        const server = await this._device!.gatt?.connect();
         if (!server) throw new Error('Cannot connect');
         const ember = await server?.getPrimaryService(Uuid.emberService);
         if (!ember) throw new Error('Cannot get primary service');
@@ -103,7 +105,8 @@ export default class Ember {
             Uuid.liquidLevelChar,
             Uuid.batteryChar,
             Uuid.liquidStateChar,
-            Uuid.ledColorChar]) {
+            Uuid.ledColorChar,
+            Uuid.bondChar]) {
             const char = await ember!.getCharacteristic(uuid);
             if (!char) throw new Error(`Cannot get characteristic ${uuid}`);
             this._chars[uuid] = char;
@@ -116,6 +119,24 @@ export default class Ember {
             this._chars[uuid] = char;
         }
         this._setters.setConnState(ConnState.ready);
+    }
+
+    async connect() {
+        console.info('Discovering');
+        this._setters.setConnState(ConnState.choosing);
+        this._device = await navigator.bluetooth.requestDevice({
+            filters: [{
+                name: btName,
+                services: [Uuid.descriptorService],
+            }],
+            optionalServices: [Uuid.emberService],
+        });
+        if (!this._device) throw new Error('Device selection cancelled');
+        this._initialize()
+    }
+
+    bond() {
+        this._queue.push({ that: this, cmd: 'bond' });
     }
 
     getMugName() {
@@ -164,6 +185,12 @@ export default class Ember {
 
     setTemperatureUnit(unit: TempUnit) {
         this._queue.push({that: this, cmd: 'setTemperatureUnit', args: [unit]});
+    }
+
+    private async _bond() {
+        console.log("Bonding")
+        const reply = await this._chars[Uuid.bondChar]!.readValue()
+        console.debug("Bond reply", Buffer.from(reply.buffer, reply.byteOffset, reply.byteLength).toString("hex"))
     }
 
     private async _setMugName(name: string) {
@@ -243,6 +270,9 @@ export default class Ember {
             case 'setTemperatureUnit':
                 const [unit] = args;
                 await that._setTemperatureUnit(unit);
+                break;
+            case 'bond':
+                await that._bond()
                 break;
         }
     }
