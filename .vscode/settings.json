@@ -1,0 +1,11 @@
+{
+    "eslint.experimental.useFlatConfig": true,
+    "eslint.validate": [
+        "javascript",
+        "typescript"
+    ],
+    "[typescriptreact]": {
+        "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+    },
+    "typescript.tsdk": "node_modules/typescript/lib"
+}
