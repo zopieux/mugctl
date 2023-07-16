@@ -14,7 +14,8 @@ import {
     Heading,
     Icon,
     IconButton,
-    Img, Link,
+    Img,
+    Link,
     Popover,
     PopoverBody,
     PopoverContent,
@@ -38,7 +39,8 @@ import {
     IconPlug,
     IconQuestionMark,
     IconSnowflake,
-    IconTemperature, IconZzz,
+    IconTemperature,
+    IconZzz,
 } from "@tabler/icons-react"
 
 import "./App.css"
