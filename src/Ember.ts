@@ -9,6 +9,7 @@ export type Battery = { level: number, charging: boolean };
 export type Setters = {
     setMugName: (s: string) => void,
     setConnState: (cs: ConnState) => void,
+    setBondState: (cs: BondState) => void,
     setDrinkTemperature: (t: number) => void,
     setTargetTemperature: (t: number) => void,
     setTemperatureUnit: (u: TempUnit) => void,
@@ -59,6 +60,10 @@ export enum ConnState {
     idle, choosing, connecting, ready,
 }
 
+export enum BondState {
+    idle, bonding, bonded
+}
+
 export default class Ember {
     private readonly _queue
     private readonly _setters: Setters
@@ -80,7 +85,7 @@ export default class Ember {
         const devices = await navigator.bluetooth.getDevices()
         if (devices.length) {
             this._device = devices[0]
-            this._initialize()
+            await this._initialize()
             return true
         }
         return false
@@ -190,8 +195,15 @@ export default class Ember {
 
     private async _bond() {
         console.log("Bonding")
-        const reply = await this._chars[Uuid.bondChar]!.readValue()
-        console.debug("Bond reply", Buffer.from(reply.buffer, reply.byteOffset, reply.byteLength).toString("hex"))
+        this._setters.setBondState(BondState.bonding)
+        try {
+            const reply = await this._chars[Uuid.bondChar]!.readValue()
+            this._setters.setBondState(BondState.bonded)
+            console.log("Bond reply", reply, new Uint8Array(reply.buffer, reply.byteOffset, reply.byteLength).toString())
+        } catch (e) {
+            console.error(e)
+            this._setters.setBondState(BondState.idle)
+        }
     }
 
     private async _setMugName(name: string) {
@@ -232,85 +244,85 @@ export default class Ember {
             return
         }
         switch (cmd) {
-            case "getMugName":
-                that._setters.setMugName(toStr(await that._chars[Uuid.mugNameChar]!.readValue()))
-                break
-            case "setMugName":
-                const [name] = args
-                await that._setMugName(name)
-                break
-            case "getDrinkTemperature":
-                that._setters.setDrinkTemperature(toTemperature(await that._chars[Uuid.drinkTempChar]!.readValue()))
-                break
-            case "getTargetTemperature":
-                that._setters.setTargetTemperature(toTemperature(await that._chars[Uuid.targetTempChar]!.readValue()))
-                break
-            case "setTargetTemperature":
-                const [temperature] = args
-                await that._setTargetTemperature(temperature)
-                break
-            case "getLiquidLevel":
-                that._setters.setLiquidLevel(toLevel(await that._chars[Uuid.liquidLevelChar]!.readValue()))
-                break
-            case "getBattery":
-                that._setters.setBattery(toBattery(await that._chars[Uuid.batteryChar]!.readValue()))
-                break
-            case "getLiquidState":
-                that._setters.setLiquidState(toLiquidState(await that._chars[Uuid.liquidStateChar]!.readValue()))
-                break
-            case "getLedColor":
-                that._setters.setLedColor(toColor(await that._chars[Uuid.ledColorChar]!.readValue()))
-                break
-            case "setLedColor":
-                const [color] = args
-                await that._setLedColor(color)
-                break
-            case "getTemperatureUnit":
-                that._setters.setTemperatureUnit(toTemperatureUnit(await that._chars[Uuid.tempUnitChar]!.readValue()))
-                break
-            case "setTemperatureUnit":
-                const [unit] = args
-                await that._setTemperatureUnit(unit)
-                break
-            case "bond":
-                await that._bond()
-                break
+        case "getMugName":
+            that._setters.setMugName(toStr(await that._chars[Uuid.mugNameChar]!.readValue()))
+            break
+        case "setMugName":
+            const [name] = args
+            await that._setMugName(name)
+            break
+        case "getDrinkTemperature":
+            that._setters.setDrinkTemperature(toTemperature(await that._chars[Uuid.drinkTempChar]!.readValue()))
+            break
+        case "getTargetTemperature":
+            that._setters.setTargetTemperature(toTemperature(await that._chars[Uuid.targetTempChar]!.readValue()))
+            break
+        case "setTargetTemperature":
+            const [temperature] = args
+            await that._setTargetTemperature(temperature)
+            break
+        case "getLiquidLevel":
+            that._setters.setLiquidLevel(toLevel(await that._chars[Uuid.liquidLevelChar]!.readValue()))
+            break
+        case "getBattery":
+            that._setters.setBattery(toBattery(await that._chars[Uuid.batteryChar]!.readValue()))
+            break
+        case "getLiquidState":
+            that._setters.setLiquidState(toLiquidState(await that._chars[Uuid.liquidStateChar]!.readValue()))
+            break
+        case "getLedColor":
+            that._setters.setLedColor(toColor(await that._chars[Uuid.ledColorChar]!.readValue()))
+            break
+        case "setLedColor":
+            const [color] = args
+            await that._setLedColor(color)
+            break
+        case "getTemperatureUnit":
+            that._setters.setTemperatureUnit(toTemperatureUnit(await that._chars[Uuid.tempUnitChar]!.readValue()))
+            break
+        case "setTemperatureUnit":
+            const [unit] = args
+            await that._setTemperatureUnit(unit)
+            break
+        case "bond":
+            await that._bond()
+            break
         }
     }
 
     private static async _charChanged(that: Ember, event: any) {
         const char: BluetoothRemoteGATTCharacteristic = event.target, value = char.value!
         switch (char.uuid) {
-            case Uuid.pushEventChar:
-                const what = value.getUint8(0)
-                console.debug(`Characteristic ${Event[what]} changed`)
-                switch (what) {
-                    case Event.battery:
-                        await that.getBattery()
-                        break
-                    case Event.chargerConnected:
-                        that._setters.setBattery((b) => ({ ...b!, charging: true }))
-                        break
-                    case Event.chargerDisconnected:
-                        that._setters.setBattery((b) => ({ ...b!, charging: false }))
-                        break
-                    case Event.targetTemperature:
-                        await that.getTargetTemperature()
-                        break
-                    case Event.drinkTemperature:
-                        await that.getDrinkTemperature()
-                        break
-                    case Event.liquidLevel:
-                        await that.getLiquidLevel()
-                        break
-                    case Event.liquidState:
-                        await that.getLiquidState()
-                        break
-                }
+        case Uuid.pushEventChar:
+            const what = value.getUint8(0)
+            console.debug(`Characteristic ${Event[what]} changed`)
+            switch (what) {
+            case Event.battery:
+                await that.getBattery()
                 break
-            case Uuid.statisticsChar:
-                console.debug("Got statistics:", value.byteLength, value.buffer)
+            case Event.chargerConnected:
+                that._setters.setBattery((b) => ({ ...b!, charging: true }))
                 break
+            case Event.chargerDisconnected:
+                that._setters.setBattery((b) => ({ ...b!, charging: false }))
+                break
+            case Event.targetTemperature:
+                await that.getTargetTemperature()
+                break
+            case Event.drinkTemperature:
+                await that.getDrinkTemperature()
+                break
+            case Event.liquidLevel:
+                await that.getLiquidLevel()
+                break
+            case Event.liquidState:
+                await that.getLiquidState()
+                break
+            }
+            break
+        case Uuid.statisticsChar:
+            console.debug("Got statistics:", value.byteLength, value.buffer)
+            break
         }
     }
 };

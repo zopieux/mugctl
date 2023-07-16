@@ -13,9 +13,9 @@ import {
 import {Battery} from "./Ember"
 
 export default function BatteryIcon({
-                                        battery: {level, charging},
-                                        ...props
-                                    }: { battery: Battery } & Record<string, any>) {
+    battery: {level, charging},
+    ...props
+}: { battery: Battery } & Record<string, any>) {
     const icon = charging ? IconBatteryCharging
         : level <= .2 ? IconBattery
             : level <= .5 ? IconBattery1

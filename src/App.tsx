@@ -31,6 +31,8 @@ import {
 import { CirclePicker, HuePicker, RGBColor } from "react-color"
 import {
     IconAlertTriangle,
+    IconBluetooth,
+    IconBluetoothConnected,
     IconCheck,
     IconFlame,
     IconMug,
@@ -46,7 +48,7 @@ import {
 import "./App.css"
 import BatteryIcon from "./BatteryIcon"
 import mugPng from "./mug.png"
-import Ember, { Battery, ConnState, LiquidState, RawColor } from "./Ember"
+import Ember, { Battery, BondState, ConnState, LiquidState, RawColor } from "./Ember"
 import { fromDisplay, temperatureDisplay, temperatureUnit, TempUnit, toDisplay, useLocalStorage } from "./Util"
 
 const Parameter = ({
@@ -247,6 +249,7 @@ function StateIcon({ state }: { state: LiquidState }) {
     return (<Icon as={icon as () => JSX.Element} color={color as string} className="state-icon" boxSize="1.5rem" />)
 }
 
+
 function Device() {
     const [mugName, setMugName] = React.useState<string | null>(null)
     const [drinkTemperature, setDrinkTemperature] = React.useState<number | null>(null)
@@ -258,9 +261,12 @@ function Device() {
     const [ledColor, setLedColor] = React.useState<RawColor | null>(null)
 
     const [connState, setConnState] = React.useState<ConnState>(ConnState.idle)
+    const [bondState, setBondState] = React.useState<BondState>(BondState.idle)
+
     const [ember] = React.useState<Ember>(new Ember({
         setMugName,
         setConnState,
+        setBondState,
         setDrinkTemperature,
         setTargetTemperature,
         setTemperatureUnit,
@@ -269,6 +275,8 @@ function Device() {
         setBattery,
         setLedColor,
     }))
+    // @ts-ignore
+    window.ember = ember
 
     const [error, setError] = React.useState<string | null>(null)
 
@@ -290,6 +298,7 @@ function Device() {
                 const ok = await ember.maybeReconnect()
                 if (!ok) throw "No readily available device"
             } catch (e) {
+                console.debug(e)
                 setError(`${e}`)
                 setConnState(ConnState.idle)
             }
@@ -310,7 +319,6 @@ function Device() {
             ember.getLedColor()
             ember.getLiquidState()
         })()
-        ember.bond()
     }, [ember, connState])
 
     const hasFullState = [mugName, drinkTemperature, temperatureUnit, battery, targetTemperature, liquidLevel, ledColor, liquidState]
@@ -321,6 +329,10 @@ function Device() {
         const newName = prompt("Set mug name", mugName)
         if (newName === null) return
         ember.setMugName(newName)
+    }
+
+    function doBond() {
+        ember.bond()
     }
 
     return (<>{
@@ -349,6 +361,11 @@ function Device() {
                 <Parameter label="LED color">
                     <ColorPicker color={ledColor!} onChange={c => ember.setLedColor(c)} />
                 </Parameter>
+                <Button
+                    leftIcon={bondState === BondState.bonded ? <IconBluetoothConnected/> : <IconBluetooth/>}
+                    isLoading={bondState === BondState.bonding}
+                    isDisabled={bondState !== BondState.idle}
+                    onClick={() => doBond()}>{bondState === BondState.bonded ? "Bonded" : "Bond to this device"}</Button>
             </>
         ))
     }</>)
