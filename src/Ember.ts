@@ -133,9 +133,9 @@ export default class Ember {
         this._device = await navigator.bluetooth.requestDevice({
             filters: [{
                 name: btName,
-                services: [Uuid.descriptorService],
+                // services: [Uuid.descriptorService],
             }],
-            optionalServices: [Uuid.emberService],
+            optionalServices: [Uuid.descriptorService, Uuid.emberService],
         })
         if (!this._device) throw new Error("Device selection cancelled")
         this._initialize()
